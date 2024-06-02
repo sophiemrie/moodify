@@ -1,6 +1,6 @@
 <template>
   <div class="playlist-container">
-    <Header />
+    <Header :user="user" />
     <div v-if="token">
       <h3>Your Playlists:</h3>
       <ul>
@@ -13,7 +13,6 @@
         <span>Page {{ currentPage }} of {{ totalPages }}</span>
         <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
       </div>
-      <button @click="goToMoodSelector">Create Playlist Based on Mood</button>
     </div>
   </div>
 </template>
@@ -29,6 +28,7 @@ export default {
   data() {
     return {
       token: null,
+      user: null,
       playlists: [],
       currentPage: 1,
       pageSize: 10
@@ -73,11 +73,21 @@ export default {
         console.error('Error fetching playlists:', error);
       }
     },
+    async fetchUser() {
+      if (!this.token) return;
+      try {
+        const response = await axios.get('https://api.spotify.com/v1/me', {
+          headers: {
+            Authorization: `Bearer ${this.token}`
+          }
+        });
+        this.user = response.data;
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    },
     goToDetail(id) {
       this.$router.push({ name: 'PlaylistDetail', params: { id } });
-    },
-    goToMoodSelector() {
-      this.$router.push({ name: 'MoodSelector' });
     },
     nextPage() {
       if (this.currentPage < this.totalPages) {
@@ -97,10 +107,12 @@ export default {
     if (this.token) {
       localStorage.setItem('spotify_token', this.token);
       this.fetchPlaylists();
+      this.fetchUser();
     } else {
       this.token = localStorage.getItem('spotify_token');
       if (this.token) {
         this.fetchPlaylists();
+        this.fetchUser();
       }
     }
   },

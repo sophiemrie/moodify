@@ -1,27 +1,18 @@
 <template>
   <div class="mood-selector-container">
-    <Header />
+    <Header :user="user" />
     <div v-if="token">
-      <h3>Select your mood:</h3>
-      <div class="emoji-container">
-        <span @click="selectMood('happy')">😊</span>
-        <span @click="selectMood('sad')">😢</span>
-        <span @click="selectMood('energetic')">💪</span>
-        <span @click="selectMood('relaxed')">😌</span>
+      <h3>Select Your Mood:</h3>
+      <div class="mood-buttons">
+        <button v-for="mood in moods" :key="mood" @click="selectMood(mood)">
+          {{ mood }}
+        </button>
       </div>
       <div v-if="selectedMood">
-        <h4>Selected Mood: {{ selectedMood }}</h4>
-        <form @submit.prevent="createPlaylist">
-          <div>
-            <label for="playlistName">Playlist Name:</label>
-            <input id="playlistName" v-model="playlistName" required />
-          </div>
-          <div>
-            <label for="songCount">Number of Songs (max 25):</label>
-            <input id="songCount" v-model.number="songCount" type="number" min="1" max="25" required />
-          </div>
-          <button type="submit">Create Playlist</button>
-        </form>
+        <h4>Create Playlist based on {{ selectedMood }} mood</h4>
+        <input type="text" v-model="playlistName" placeholder="Playlist Name" />
+        <input type="number" v-model="playlistSize" placeholder="Number of Songs" min="1" max="25" />
+        <button @click="createPlaylist">Create Playlist</button>
       </div>
     </div>
   </div>
@@ -38,74 +29,88 @@ export default {
   data() {
     return {
       token: null,
-      selectedMood: '',
+      user: null,
+      moods: ['Happy', 'Sad', 'Energetic', 'Calm'],
+      selectedMood: null,
       playlistName: '',
-      songCount: 1
+      playlistSize: 10
     };
   },
   methods: {
+    async fetchUser() {
+      if (!this.token) return;
+      try {
+        const response = await axios.get('https://api.spotify.com/v1/me', {
+          headers: {
+            Authorization: `Bearer ${this.token}`
+          }
+        });
+        this.user = response.data;
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    },
     selectMood(mood) {
       this.selectedMood = mood;
     },
     async createPlaylist() {
-      if (!this.token) return;
-
-      // Create playlist
-      const response = await axios.post(
-        'https://api.spotify.com/v1/me/playlists',
-        {
-          name: this.playlistName,
-          description: `Playlist created based on mood: ${this.selectedMood}`,
-          public: false
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${this.token}`
-          }
-        }
-      );
-
-      const playlistId = response.data.id;
-
-      // Add tracks to playlist based on mood
-      const tracks = await this.fetchTracksBasedOnMood(this.selectedMood, this.songCount);
-      if (tracks.length > 0) {
-        await axios.post(
-          `https://api.spotify.com/v1/playlists/${playlistId}/tracks`,
-          {
-            uris: tracks
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${this.token}`
-            }
-          }
-        );
+      if (!this.playlistName || !this.selectedMood || this.playlistSize < 1 || this.playlistSize > 25) {
+        alert('Please fill all fields correctly.');
+        return;
       }
 
-      // Redirect to playlist detail page
-      this.$router.push({ name: 'PlaylistDetail', params: { id: playlistId } });
-    },
-    async fetchTracksBasedOnMood(mood, limit) {
-      const response = await axios.get(
-        `https://api.spotify.com/v1/recommendations`,
-        {
-          params: {
-            seed_genres: mood,
-            limit: limit
-          },
+      try {
+        const response = await axios.post('https://api.spotify.com/v1/users/' + this.user.id + '/playlists', {
+          name: this.playlistName,
+          description: `A ${this.selectedMood} playlist`,
+          public: false
+        }, {
           headers: {
             Authorization: `Bearer ${this.token}`
           }
-        }
-      );
-      return response.data.tracks.map(track => track.uri);
+        });
+
+        const playlistId = response.data.id;
+
+        // Add tracks based on mood
+        const moodTracks = await axios.get(`https://api.spotify.com/v1/recommendations`, {
+          headers: {
+            Authorization: `Bearer ${this.token}`
+          },
+          params: {
+            limit: this.playlistSize,
+            seed_genres: this.selectedMood.toLowerCase()
+          }
+        });
+
+        const trackUris = moodTracks.data.tracks.map(track => track.uri);
+
+        await axios.post(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+          uris: trackUris
+        }, {
+          headers: {
+            Authorization: `Bearer ${this.token}`
+          }
+        });
+
+        alert('Playlist created successfully!');
+      } catch (error) {
+        console.error('Error creating playlist:', error);
+      }
     }
   },
   created() {
-    this.token = localStorage.getItem('spotify_token');
-    if (!this.token) {
-      this.$router.push({ name: 'Login' });
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    this.token = params.get('access_token');
+    if (this.token) {
+      localStorage.setItem('spotify_token', this.token);
+      this.fetchUser();
+    } else {
+      this.token = localStorage.getItem('spotify_token');
+      if (this.token) {
+        this.fetchUser();
+      }
     }
   }
 };
@@ -117,25 +122,41 @@ export default {
   background: #f0f0f0;
   min-height: 100vh;
 }
+
 h3 {
-  color: #ffcc5c;
+  color: #4da6ff;
 }
-.emoji-container {
+
+.mood-buttons {
   display: flex;
-  justify-content: space-around;
-  margin: 20px 0;
+  flex-wrap: wrap;
 }
-.emoji-container span {
-  font-size: 48px;
+
+.mood-buttons button {
+  background-color: #ffcc5c;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 5px;
   cursor: pointer;
+  margin: 5px;
 }
-form {
-  display: flex;
-  flex-direction: column;
+
+.mood-buttons button:hover {
+  background-color: #e6b34b;
 }
-form div {
-  margin-bottom: 10px;
+
+input[type="text"],
+input[type="number"] {
+  display: block;
+  margin: 10px 0;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
 }
+
 button {
   background-color: #4da6ff;
   color: white;
@@ -145,7 +166,8 @@ button {
   border-radius: 5px;
   cursor: pointer;
 }
+
 button:hover {
-  background-color: #3b8ed0;
+  background-color: #3b8edc;
 }
 </style>
