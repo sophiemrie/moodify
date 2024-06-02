@@ -2,14 +2,21 @@
   <div class="playlist-container">
     <Header :user="user" />
     <div v-if="token">
-      <h3>Your Playlists:</h3>
-      <ul>
-        <li v-for="playlist in paginatedPlaylists" :key="playlist.id" @click="goToDetail(playlist.id)">
-          {{ playlist.name }}
-        </li>
-      </ul>
+      <h2>Your Playlists</h2>
+      <div v-if="isLoading">
+        <p>Loading...</p>
+      </div>
+      <div class="playlist-list">
+        <div v-for="playlist in paginatedPlaylists" :key="playlist.id" class="playlist-item"
+          @click="goToDetail(playlist.id)">
+          <div class="playlist-image-container">
+            <img :src="getPlaylistImage(playlist)" alt="Playlist Image" class="playlist-image" />
+          </div>
+          <div class="playlist-name">{{ playlist.name }}</div>
+        </div>
+      </div>
       <div class="pagination">
-        <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
+        <button @click="prevPage" :disabled="currentPage === 1">Prev</button>
         <span>Page {{ currentPage }} of {{ totalPages }}</span>
         <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
       </div>
@@ -31,7 +38,7 @@ export default {
       user: null,
       playlists: [],
       currentPage: 1,
-      pageSize: 10
+      pageSize: 16,
     };
   },
   computed: {
@@ -45,8 +52,22 @@ export default {
     }
   },
   methods: {
+    async fetchUser() {
+      if (!this.token) return;
+      try {
+        const response = await axios.get('https://api.spotify.com/v1/me', {
+          headers: {
+            Authorization: `Bearer ${this.token}`
+          }
+        });
+        this.user = response.data;
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    },
     async fetchPlaylists() {
       if (!this.token) return;
+      this.isLoading = true;
       try {
         let response = await axios.get('https://api.spotify.com/v1/me/playlists', {
           headers: {
@@ -59,6 +80,7 @@ export default {
 
         // Fetch additional playlists if there are more than 50
         let allPlaylists = response.data.items;
+        this.isLoading = false;
         while (response.data.next) {
           response = await axios.get(response.data.next, {
             headers: {
@@ -71,19 +93,14 @@ export default {
         this.playlists = allPlaylists;
       } catch (error) {
         console.error('Error fetching playlists:', error);
+        this.isLoading = false;
       }
     },
-    async fetchUser() {
-      if (!this.token) return;
-      try {
-        const response = await axios.get('https://api.spotify.com/v1/me', {
-          headers: {
-            Authorization: `Bearer ${this.token}`
-          }
-        });
-        this.user = response.data;
-      } catch (error) {
-        console.error('Error fetching user data:', error);
+    getPlaylistImage(playlist) {
+      if (playlist.images != null && playlist.images.length > 0) {
+        return playlist.images[0].url;
+      } else {
+        return 'default-playlist-image.jpg'; // Hier kannst du den Pfad zu deinem Standardbild einfügen
       }
     },
     goToDetail(id) {
@@ -106,18 +123,15 @@ export default {
     this.token = params.get('access_token');
     if (this.token) {
       localStorage.setItem('spotify_token', this.token);
-      this.fetchPlaylists();
       this.fetchUser();
+      this.fetchPlaylists();
     } else {
       this.token = localStorage.getItem('spotify_token');
       if (this.token) {
-        this.fetchPlaylists();
         this.fetchUser();
+        this.fetchPlaylists();
       }
     }
-  },
-  watch: {
-    $route: 'fetchPlaylists' // Reload playlists when the route changes
   }
 };
 </script>
@@ -128,46 +142,80 @@ export default {
   background: #f0f0f0;
   min-height: 100vh;
 }
-h3 {
+
+h2 {
   color: #4da6ff;
 }
-ul {
-  list-style: none;
-  padding: 0;
+
+.playlist-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
 }
-li {
+
+.playlist-item {
   background: white;
   padding: 10px;
-  margin: 5px 0;
   border-radius: 5px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  transition: transform 0.2s;
 }
-li:hover {
-  transform: scale(1.05);
+
+.playlist-image-container {
+  width: 200px;
+  /* Breite des Bildcontainers */
+  height: 200px;
+  /* Höhe des Bildcontainers */
+  overflow: hidden;
+  /* Überlauf ausblenden */
+  border-radius: 5px;
 }
+
+.playlist-image {
+  width: 100%;
+  /* Bildbreite 100% des Containers */
+  height: auto;
+  /* Automatische Höhe */
+  display: block;
+  /* Display auf Block setzen */
+  border-radius: 5px;
+}
+
+.playlist-item:hover {
+  transform: translateY(-5px);
+  transition: transform 0.3s ease;
+}
+
 .pagination {
+  margin-top: 20px;
   display: flex;
-  justify-content: center;
   align-items: center;
-  margin: 20px 0;
+  justify-content: center;
 }
-button {
-  background-color: #ffcc5c;
+
+.pagination button {
+  background-color: #4da6ff;
   color: white;
   border: none;
-  padding: 10px;
+  padding: 5px 10px;
   font-size: 16px;
   border-radius: 5px;
   cursor: pointer;
-  margin: 0 10px;
+  margin: 0 5px;
 }
-button:hover {
-  background-color: #e6b34b;
-}
-button:disabled {
-  background-color: #ccc;
+
+.pagination button:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
+}
+
+.pagination span {
+  font-size: 16px;
+}
+
+.playlist-name {
+  color: #333;
+  text-decoration: none;
+  font-size: 18px;
 }
 </style>

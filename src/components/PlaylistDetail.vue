@@ -1,18 +1,25 @@
 <template>
   <div class="playlist-detail-container">
-    <Header />
-    <div v-if="token && tracks.length">
-      <h3>{{ playlistName }}</h3>
+    <Header :user="user" />
+    <div v-if="token">
+      <h3>{{ playlist?.name }}</h3>
+      <iframe
+        v-if="playlist"
+        :src="`https://open.spotify.com/embed/playlist/${playlist.id}`"
+        width="700"
+        height="380"
+        frameborder="0"
+        allowtransparency="true"
+        allow="encrypted-media"
+      ></iframe>
       <ul>
-        <li v-for="track in tracks" :key="track.track.id">
+        <li v-for="track in playlistTracks" :key="track.id" class="track-item">
+          <img :src="track.album.images[0].url" alt="Track Image" class="track-image" />
           <div class="track-info">
-            <img :src="track.track.album.images[0].url" alt="Album cover">
-            <div>
-              <h4>{{ track.track.name }}</h4>
-              <p>{{ track.track.artists[0].name }}</p>
-            </div>
+            <span>{{ track.name }}</span>
+            <span>{{ track.artists.map(artist => artist.name).join(', ') }}</span>
+            <span>{{ track.album.name }}</span>
           </div>
-          <iframe :src="'https://open.spotify.com/embed/track/' + track.track.id" width="300" height="80" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
         </li>
       </ul>
     </div>
@@ -30,29 +37,55 @@ export default {
   data() {
     return {
       token: null,
-      playlistName: '',
-      tracks: []
+      user: null,
+      playlist: null,
+      playlistTracks: []
     };
   },
   methods: {
-    async fetchPlaylistDetail() {
+    async fetchUser() {
+      if (!this.token) return;
+      try {
+        const response = await axios.get('https://api.spotify.com/v1/me', {
+          headers: {
+            Authorization: `Bearer ${this.token}`
+          }
+        });
+        this.user = response.data;
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    },
+    async fetchPlaylist() {
       if (!this.token) return;
       const playlistId = this.$route.params.id;
-      const response = await axios.get(`https://api.spotify.com/v1/playlists/${playlistId}`, {
-        headers: {
-          'Authorization': `Bearer ${this.token}`
-        }
-      });
-      this.playlistName = response.data.name;
-      this.tracks = response.data.tracks.items;
+      try {
+        const response = await axios.get(`https://api.spotify.com/v1/playlists/${playlistId}`, {
+          headers: {
+            Authorization: `Bearer ${this.token}`
+          }
+        });
+        this.playlist = response.data;
+        this.playlistTracks = response.data.tracks.items.map(item => item.track);
+      } catch (error) {
+        console.error('Error fetching playlist:', error);
+      }
     }
   },
   created() {
-    this.token = localStorage.getItem('spotify_token');
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    this.token = params.get('access_token');
     if (this.token) {
-      this.fetchPlaylistDetail();
+      localStorage.setItem('spotify_token', this.token);
+      this.fetchUser();
+      this.fetchPlaylist();
     } else {
-      this.$router.push({ name: 'Login' });
+      this.token = localStorage.getItem('spotify_token');
+      if (this.token) {
+        this.fetchUser();
+        this.fetchPlaylist();
+      }
     }
   }
 };
@@ -65,38 +98,43 @@ export default {
   min-height: 100vh;
 }
 h3 {
-  color: #b76eff;
+  color: #4da6ff;
+}
+img {
+  width: 300px;
+  height: auto;
+  border-radius: 10px;
   margin-bottom: 20px;
 }
 ul {
   list-style: none;
   padding: 0;
 }
-li {
+.track-item {
+  display: flex;
+  align-items: center;
   background: white;
   padding: 10px;
-  margin: 10px 0;
+  margin: 5px 0;
   border-radius: 5px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-.track-info {
-  display: flex;
-  align-items: center;
-}
-.track-info img {
-  width: 64px;
-  height: 64px;
+.track-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 5px;
   margin-right: 10px;
 }
-.track-info h4 {
-  margin: 0;
-  color: #4da6ff;
+.track-info {
+  display: flex;
+  flex-direction: column;
 }
-.track-info p {
-  margin: 0;
-  color: #888;
+.track-info span {
+  margin: 2px 0;
 }
 iframe {
-  margin-top: 10px;
+  margin-top: 20px;
+  border: none;
+  border-radius: 10px;
 }
 </style>

@@ -6,8 +6,8 @@
       <button @click="logout">Logout</button>
     </div>
     <nav class="nav-menu">
-      <router-link to="/playlists">Playlists</router-link>
-      <router-link to="/mood-selector">Create Playlist</router-link>
+      <router-link to="/callback">Playlists</router-link>
+      <router-link to="/mood">Create Playlist</router-link>
     </nav>
   </div>
 </template>
