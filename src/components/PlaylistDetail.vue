@@ -3,38 +3,27 @@
     <Header :user="user" />
     <div v-if="token">
       <h3>{{ playlist?.name }}</h3>
-    <div class="detail-container">
-      <iframe
-        v-if="playlist"
-        :src="`https://open.spotify.com/embed/playlist/${playlist.id}`"
-        width="700"
-        height="380"
-        frameborder="0"
-        allowtransparency="true"
-        allow="encrypted-media"
-      ></iframe>
-      <ul>
-        <li v-for="track in playlistTracks" :key="track.id" class="track-item">
-          <img :src="track.album.images[0].url" alt="Track Image" class="track-image" />
-          <div class="track-info">
-            <span>{{ track.name }}</span>
-            <span>{{ track.artists.map(artist => artist.name).join(', ') }}</span>
-            <span>{{ track.album.name }}</span>
-            <button @click="fetchYouTubeLink(track)">Watch Youtube-Video</button>
-            <a :href="trackYoutubeLinks[track.id]" target="_blank" v-if="trackYoutubeLinks[track.id]">YouTube Link</a>
-            <div v-if="trackYoutubeLinks[track.id]">
-              <iframe
-                :src="convertToEmbedUrl(trackYoutubeLinks[track.id])"
-                width="560"
-                height="315"
-                frameborder="0"
+      <div class="detail-container">
+        <iframe v-if="playlist" :src="`https://open.spotify.com/embed/playlist/${playlist.id}`" width="700" height="380"
+          frameborder="0" allowtransparency="true" allow="encrypted-media" class="spotify-playlist"></iframe>
+        <ul>
+          <li v-for="track in playlistTracks" :key="track.id" class="track-item">
+            <img :src="track.album.images[0].url" alt="Track Image" class="track-image" />
+            <div class="track-info">
+              <span>{{ track.name }}</span>
+              <span class="artist">{{ track.artists.map(artist => artist.name).join(', ') }}</span>
+              <span class="album">Album: {{ track.album.name }}</span>
+            </div>
+            <div class="youtube">
+            <button v-if="!trackYoutubeLinks[track.id]" @click="fetchYouTubeLink(track)">Watch Youtube-Video</button>
+            <div v-if="trackYoutubeLinks[track.id]" class="youtube-video">
+              <iframe :src="convertToEmbedUrl(trackYoutubeLinks[track.id])" width="560" height="315" frameborder="0"
                 allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen
-              ></iframe>
+                allowfullscreen></iframe>
             </div>
           </div>
-        </li>
-      </ul>
+          </li>
+        </ul>
       </div>
     </div>
   </div>
@@ -102,7 +91,7 @@ export default {
         console.error('Error fetching YouTube link:', error);
       }
     },
-    convertToEmbedUrl(url){
+    convertToEmbedUrl(url) {
       const embedUrl = url.replace("watch?v=", "embed/");
       return embedUrl;
     }
@@ -139,50 +128,75 @@ img {
   border-radius: 10px;
   margin-bottom: 20px;
 }
+
 ul {
   list-style: none;
   padding: 0;
 }
+
 .track-item {
   display: flex;
   align-items: center;
+  vertical-align: middle;
   background: white;
   padding: 10px;
   margin: 5px 0;
   border-radius: 5px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
 .track-image {
   width: 50px;
   height: 50px;
-  border-radius: 5px;
-  margin-right: 10px;
+  margin: 5px;
 }
+
 .track-info {
   display: flex;
   flex-direction: column;
+  width: 30%;
 }
+
+.youtube {
+  width: 70%;
+  display: flex;
+  justify-content: space-around;
+}
+
+.youtube-video {
+  width: 100%;
+}
+
 .track-info span {
   margin: 2px 0;
 }
-iframe {
-  margin-top: 20px;
-  border: none;
-  border-radius: 10px;
-  height: 100vh;
+
+.artist {
+  font-size: smaller;
 }
 
-.detail-container{
+.album {
+  font-size: x-small;
+}
+
+.youtube-video iframe {
+  border: none;
+  border-radius: 10px;
+  width: 100%;
+}
+
+.detail-container {
   display: flex;
   justify-content: space-between;
 }
 
-.detail-container iframe{
+.detail-container .spotify-playlist {
   width: 45%;
   padding-left: 2.5%;
+  height: 100vh;
 }
 
-.detail-container ul{
+.detail-container ul {
   width: 45%;
   padding-right: 2.5%;
 }

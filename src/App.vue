@@ -50,7 +50,7 @@ button {
   background-color: #FFAA2B;
   color: white;
   border: none;
-  padding: 8px 16px;
+  padding: 10px 16px;
   font-size: 16px;
   border-radius: 16px;
   cursor: pointer;
