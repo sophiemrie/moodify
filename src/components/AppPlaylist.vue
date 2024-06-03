@@ -3,16 +3,18 @@
     <Header :user="user" />
     <div v-if="token">
       <h2>Your Playlists</h2>
-      <div v-if="isLoading">
-        <p>Loading...</p>
-      </div>
-      <div class="playlist-list">
-        <div v-for="playlist in paginatedPlaylists" :key="playlist.id" class="playlist-item"
-          @click="goToDetail(playlist.id)">
-          <div class="playlist-image-container">
-            <img :src="getPlaylistImage(playlist)" alt="Playlist Image" class="playlist-image" />
+      <div class="playlist-item-container">
+        <div v-if="isLoading" class="loading-indicator">
+          <LoadingIndicator />
+        </div>
+        <div class="playlist-list">
+          <div v-for="playlist in paginatedPlaylists" :key="playlist.id" class="playlist-item"
+            @click="goToDetail(playlist.id)">
+            <div class="playlist-image-container">
+              <img :src="getPlaylistImage(playlist)" alt="Playlist Image" class="playlist-image" />
+            </div>
+            <div class="playlist-name">{{ playlist.name }}</div>
           </div>
-          <div class="playlist-name">{{ playlist.name }}</div>
         </div>
       </div>
       <div class="pagination">
@@ -27,10 +29,14 @@
 <script>
 import Header from './AppHeader.vue';
 import axios from 'axios';
+import LoadingIndicator from './LoadingIndicator.vue';
+
+const defaultImagePath = require('../assets/images/logo-blau.png');
 
 export default {
   components: {
-    Header
+    Header,
+    LoadingIndicator
   },
   data() {
     return {
@@ -38,7 +44,7 @@ export default {
       user: null,
       playlists: [],
       currentPage: 1,
-      pageSize: 16,
+      pageSize: 16
     };
   },
   computed: {
@@ -100,7 +106,7 @@ export default {
       if (playlist.images != null && playlist.images.length > 0) {
         return playlist.images[0].url;
       } else {
-        return 'default-playlist-image.jpg'; // Hier kannst du den Pfad zu deinem Standardbild einfügen
+        return defaultImagePath; 
       }
     },
     goToDetail(id) {
@@ -143,9 +149,14 @@ export default {
   min-height: 100vh;
 }
 
-h2 {
-  color: #4da6ff;
+.playlist-item-container{
+  height: 612px;
 }
+
+.playlist-item-container .loading-indicator {
+  height: 100%;
+}
+
 
 .playlist-list {
   display: grid;
@@ -163,21 +174,15 @@ h2 {
 
 .playlist-image-container {
   width: 200px;
-  /* Breite des Bildcontainers */
   height: 200px;
-  /* Höhe des Bildcontainers */
   overflow: hidden;
-  /* Überlauf ausblenden */
   border-radius: 5px;
 }
 
 .playlist-image {
   width: 100%;
-  /* Bildbreite 100% des Containers */
   height: auto;
-  /* Automatische Höhe */
   display: block;
-  /* Display auf Block setzen */
   border-radius: 5px;
 }
 
@@ -194,14 +199,15 @@ h2 {
 }
 
 .pagination button {
-  background-color: #4da6ff;
+  background-color: #6482F4;
   color: white;
   border: none;
-  padding: 5px 10px;
+  padding: 8px 16px;
   font-size: 16px;
-  border-radius: 5px;
+  border-radius: 16px;
   cursor: pointer;
   margin: 0 5px;
+  width: 5em;
 }
 
 .pagination button:disabled {
@@ -217,5 +223,6 @@ h2 {
   color: #333;
   text-decoration: none;
   font-size: 18px;
+  margin-top:10px;
 }
 </style>

@@ -3,6 +3,7 @@
     <Header :user="user" />
     <div v-if="token">
       <h3>{{ playlist?.name }}</h3>
+    <div class="detail-container">
       <iframe
         v-if="playlist"
         :src="`https://open.spotify.com/embed/playlist/${playlist.id}`"
@@ -19,9 +20,22 @@
             <span>{{ track.name }}</span>
             <span>{{ track.artists.map(artist => artist.name).join(', ') }}</span>
             <span>{{ track.album.name }}</span>
+            <button @click="fetchYouTubeLink(track)">Watch Youtube-Video</button>
+            <a :href="trackYoutubeLinks[track.id]" target="_blank" v-if="trackYoutubeLinks[track.id]">YouTube Link</a>
+            <div v-if="trackYoutubeLinks[track.id]">
+              <iframe
+                :src="convertToEmbedUrl(trackYoutubeLinks[track.id])"
+                width="560"
+                height="315"
+                frameborder="0"
+                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+              ></iframe>
+            </div>
           </div>
         </li>
       </ul>
+      </div>
     </div>
   </div>
 </template>
@@ -39,7 +53,8 @@ export default {
       token: null,
       user: null,
       playlist: null,
-      playlistTracks: []
+      playlistTracks: [],
+      trackYoutubeLinks: {}
     };
   },
   methods: {
@@ -70,6 +85,26 @@ export default {
       } catch (error) {
         console.error('Error fetching playlist:', error);
       }
+    },
+    async fetchYouTubeLink(track) {
+      try {
+        const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+          params: {
+            key: "AIzaSyAEFtJeWTJW34GgutO9n-9UAxY1A5NCFNE",
+            q: track.name + ' ' + track.artists.map(artist => artist.name).join(', '),
+            part: 'snippet',
+            type: 'video'
+          }
+        });
+        const videoId = response.data.items[0].id.videoId;
+        this.$set(this.trackYoutubeLinks, track.id, `https://www.youtube.com/watch?v=${videoId}`);
+      } catch (error) {
+        console.error('Error fetching YouTube link:', error);
+      }
+    },
+    convertToEmbedUrl(url){
+      const embedUrl = url.replace("watch?v=", "embed/");
+      return embedUrl;
     }
   },
   created() {
@@ -97,9 +132,7 @@ export default {
   background: #f0f0f0;
   min-height: 100vh;
 }
-h3 {
-  color: #4da6ff;
-}
+
 img {
   width: 300px;
   height: auto;
@@ -136,5 +169,21 @@ iframe {
   margin-top: 20px;
   border: none;
   border-radius: 10px;
+  height: 100vh;
+}
+
+.detail-container{
+  display: flex;
+  justify-content: space-between;
+}
+
+.detail-container iframe{
+  width: 45%;
+  padding-left: 2.5%;
+}
+
+.detail-container ul{
+  width: 45%;
+  padding-right: 2.5%;
 }
 </style>

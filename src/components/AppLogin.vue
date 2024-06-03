@@ -1,7 +1,8 @@
 <template>
   <div class="login-container">
-    <h1>Login with Spotify</h1>
-    <button @click="loginWithSpotify">Login</button>
+    <img src="@/assets/images/logo-blau.png" />
+    <h1>Welcome to moodify</h1>
+    <button @click="loginWithSpotify">Login with Spotify</button>
   </div>
 </template>
 
@@ -28,21 +29,11 @@ export default {
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background: #f0f0f0;
+  background: #FFF9E8;
 }
-h1 {
-  color: #4da6ff;
+
+.login-container img{
+  height: 250px;
 }
-button {
-  background-color: #ffcc5c;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  font-size: 16px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-button:hover {
-  background-color: #e6b34b;
-}
+
 </style>

@@ -30,8 +30,9 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 10px 20px;
-  background-color: #4da6ff;
+  background-color: #6482F4;
   color: white;
+  border-radius: 5px;
 }
 .user-info {
   display: flex;
@@ -56,18 +57,7 @@ export default {
   font-size: 16px;
 }
 .nav-menu a:hover {
-  text-decoration: underline;
+  color: #FFAA2B;
 }
-button {
-  background-color: #ffcc5c;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  font-size: 16px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-button:hover {
-  background-color: #e6b34b;
-}
+
 </style>

@@ -3,10 +3,14 @@
     <Header :user="user" />
     <div v-if="token">
       <h3>Select Your Mood:</h3>
-      <div class="mood-buttons">
-        <button v-for="mood in moods" :key="mood" @click="selectMood(mood)">
-          {{ mood }}
-        </button>
+      <div class="emojies">
+        <img src="@/assets/images/study.png" @click="selectMood('study')" />
+        <img src="@/assets/images/cool.png" @click="selectMood('hip-hop')" />
+        <img src="@/assets/images/sad.png" @click="selectMood('sad')" />
+        <img src="@/assets/images/love.png" @click="selectMood('romance')" />
+        <img src="@/assets/images/happy.png" @click="selectMood('happy')" />
+        <img src="@/assets/images/party.png" @click="selectMood('party')" />
+        <img src="@/assets/images/sleepy.png" @click="selectMood('sleep')" />
       </div>
       <div v-if="selectedMood">
         <h4>Create Playlist based on {{ selectedMood }} mood</h4>
@@ -30,7 +34,6 @@ export default {
     return {
       token: null,
       user: null,
-      moods: ['Happy', 'Sad', 'Energetic', 'Calm'],
       selectedMood: null,
       playlistName: '',
       playlistSize: 10
@@ -93,7 +96,8 @@ export default {
           }
         });
 
-        alert('Playlist created successfully!');
+        //alert('Playlist created successfully!');
+        this.$router.push('/callback');
       } catch (error) {
         console.error('Error creating playlist:', error);
       }
@@ -119,32 +123,21 @@ export default {
 <style scoped>
 .mood-selector-container {
   padding: 20px;
-  background: #f0f0f0;
+  background: #FFF9E8;
   min-height: 100vh;
 }
 
-h3 {
-  color: #4da6ff;
-}
-
-.mood-buttons {
+.emojies {
+  width: 90%;
+  padding-left: 5%;
   display: flex;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.mood-buttons button {
-  background-color: #ffcc5c;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  font-size: 16px;
-  border-radius: 5px;
-  cursor: pointer;
-  margin: 5px;
-}
-
-.mood-buttons button:hover {
-  background-color: #e6b34b;
+.emojies img{
+  width: 100px;
+  height: 100px;
 }
 
 input[type="text"],
@@ -155,19 +148,5 @@ input[type="number"] {
   font-size: 16px;
   border-radius: 5px;
   border: 1px solid #ccc;
-}
-
-button {
-  background-color: #4da6ff;
-  color: white;
-  border: none;
-  padding: 10px;
-  font-size: 16px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #3b8edc;
 }
 </style>
