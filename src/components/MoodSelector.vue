@@ -162,6 +162,11 @@ export default {
   border-radius: 10px;
 }
 
+.mood-item.selected .mood-image{
+  transform: scale(1.1);
+}
+
+
 .mood-image:hover{
   transform: scale(1.1);
 }
