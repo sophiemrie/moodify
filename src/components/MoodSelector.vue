@@ -1,7 +1,7 @@
 <template>
   <div class="mood-selector-container">
     <Header :user="user" />
-    <h2>Select Your Mood</h2>
+    <h2 style="text-align: center">Select Your Mood</h2>
     <div class="mood-list">
       <div v-for="(mood, index) in moods" :key="index" :class="['mood-item', { selected: selectedMood === index }]"
         @click="selectMood(index)">
@@ -160,6 +160,10 @@ export default {
   width: 100px;
   height: 100px;
   border-radius: 10px;
+}
+
+.mood-image:hover{
+  transform: scale(1.1);
 }
 
 .mood-details-card {

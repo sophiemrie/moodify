@@ -53,11 +53,17 @@ export default {
 .nav-menu a {
   color: white;
   text-decoration: none;
+  font-weight: bold;
   margin: 0 10px;
   font-size: 16px;
+  border: 1px solid white;
+  padding: 10px;
+  border-radius: 5px;
 }
 .nav-menu a:hover {
   color: #FFAA2B;
+  border-color: #FFAA2B;
+  background-color: white;
 }
 
 </style>
